@@ -15,16 +15,20 @@ def diagnose_ed(responses):
             "autoimmune_conditions", "groin_pain", "tight_grip_masturbation"
         ]
 
-        # Normalize responses: Convert None to False, ensure all are booleans or None
+        # Normalize responses: Convert various forms of Yes/No to boolean
         normalized_responses = {}
         for field in required_fields:
             value = responses[field]
-            if value is None:
+            # Define sets of values for True and False
+            true_values = {"yes", "YES", "Yes", "true", True}
+            false_values = {"no", "NO", "No", "null", "false", False, None}
+
+            if value in true_values:
+                normalized_responses[field] = True
+            elif value in false_values:
                 normalized_responses[field] = False
-            elif isinstance(value, bool):
-                normalized_responses[field] = value
             else:
-                raise ValueError(f"Field '{field}' must be a boolean (true/false) or null")
+                raise ValueError(f"Field '{field}' must be a valid boolean-like value (Yes/yes/YES/true or No/no/NO/false/null)")
 
         categories = {
             "Psychological ED": normalized_responses["stress_anxiety"] or normalized_responses["anxious_before_sex"],
@@ -68,6 +72,7 @@ def diagnose_ed(responses):
             "status": "error",
             "message": f"Diagnosis failed: {str(e)}"
         }
+
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
