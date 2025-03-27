@@ -55,6 +55,7 @@ class handler(BaseHTTPRequestHandler):
                 "status": "success",
                 "message": "Welcome to the ED Diagnosis API! Use POST to send symptoms."
             }
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -68,7 +69,7 @@ class handler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get('Content-Length', 0))
             if content_length == 0:
                 raise ValueError("Empty request body")
-
+            print(content_length)
             # Read and parse JSON
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data)
