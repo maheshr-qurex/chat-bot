@@ -6,6 +6,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def diagnose_ed(responses):
     try:
         required_fields = [
@@ -20,15 +21,16 @@ def diagnose_ed(responses):
         for field in required_fields:
             value = responses[field]
             # Define sets of values for True and False
-            true_values = {"yes", "YES", "Yes", "true", True}
-            false_values = {"no", "NO", "No", "null", "false", False, None}
+            true_values = {"yes", "YES", "Yes", "true", True, "True", "true"}
+            false_values = {"no", "NO", "No", "null", "false", False, "False", "false", None}
 
             if value in true_values:
                 normalized_responses[field] = True
             elif value in false_values:
                 normalized_responses[field] = False
             else:
-                raise ValueError(f"Field '{field}' must be a valid boolean-like value (Yes/yes/YES/true or No/no/NO/false/null)")
+                raise ValueError(
+                    f"Field '{field}' must be a valid boolean-like value (Yes/yes/YES/true or No/no/NO/false/null)")
 
         categories = {
             "Psychological ED": normalized_responses["stress_anxiety"] or normalized_responses["anxious_before_sex"],
