@@ -59,8 +59,8 @@ def diagnose_ed(responses):
 
         return {
             "status": "success",
-            "Detected Conditions": detected_conditions,
-            "Suggested Doctors": suggested_doctors
+            "detected_conditions": detected_conditions,
+            "suggested_doctors": suggested_doctors
         }
 
     except Exception as e:
