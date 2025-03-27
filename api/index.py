@@ -8,29 +8,36 @@ logger = logging.getLogger(__name__)
 
 def diagnose_ed(responses):
     try:
-        # Validate fields are booleans (optional)
         required_fields = [
             "stress_anxiety", "anxious_before_sex", "medical_conditions",
             "smoking_alcohol", "weight_fatigue", "medications",
             "pelvic_injury", "pain_curvature", "loud_snoring",
             "autoimmune_conditions", "groin_pain", "tight_grip_masturbation"
         ]
+
+        # Normalize responses: Convert None to False, ensure all are booleans or None
+        normalized_responses = {}
         for field in required_fields:
-            if field not in responses or not isinstance(responses[field], bool):
-                raise ValueError(f"Field '{field}' must be a boolean (true/false)")
+            value = responses[field]
+            if value is None:
+                normalized_responses[field] = False
+            elif isinstance(value, bool):
+                normalized_responses[field] = value
+            else:
+                raise ValueError(f"Field '{field}' must be a boolean (true/false) or null")
 
         categories = {
-            "Psychological ED": responses["stress_anxiety"] or responses["anxious_before_sex"],
-            "Vascular ED": responses["medical_conditions"],
-            "Lifestyle-Induced ED": responses["smoking_alcohol"],
-            "Hormonal ED": responses["weight_fatigue"],
-            "Medication-Induced ED": responses["medications"],
-            "Post-Surgical or Injury-Related ED": responses["pelvic_injury"],
-            "Peyronie’s Disease": responses["pain_curvature"],
-            "Sleep Apnea-Induced ED": responses["loud_snoring"],
-            "Autoimmune & Chronic Inflammation-Related ED": responses["autoimmune_conditions"],
-            "Pelvic Floor Dysfunction": responses["groin_pain"],
-            "Death Grip Syndrome": responses["tight_grip_masturbation"],
+            "Psychological ED": normalized_responses["stress_anxiety"] or normalized_responses["anxious_before_sex"],
+            "Vascular ED": normalized_responses["medical_conditions"],
+            "Lifestyle-Induced ED": normalized_responses["smoking_alcohol"],
+            "Hormonal ED": normalized_responses["weight_fatigue"],
+            "Medication-Induced ED": normalized_responses["medications"],
+            "Post-Surgical or Injury-Related ED": normalized_responses["pelvic_injury"],
+            "Peyronie’s Disease": normalized_responses["pain_curvature"],
+            "Sleep Apnea-Induced ED": normalized_responses["loud_snoring"],
+            "Autoimmune & Chronic Inflammation-Related ED": normalized_responses["autoimmune_conditions"],
+            "Pelvic Floor Dysfunction": normalized_responses["groin_pain"],
+            "Death Grip Syndrome": normalized_responses["tight_grip_masturbation"],
         }
 
         recommendations = {
