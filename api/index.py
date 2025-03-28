@@ -82,13 +82,17 @@ def diagnose_pe(responses):
 
         normalized_responses = {}
         for field in required_fields:
-            value = responses.get(field, None)
-            if value is None:
+            value = responses[field]
+            true_values = {"yes", "YES", "Yes", "true", True, "True"}
+            false_values = {"no", "NO", "No", "null", "false", False, "False", None}
+
+           if value in true_values:
+                normalized_responses[field] = True
+            elif value in false_values:
                 normalized_responses[field] = False
-            elif isinstance(value, bool):
-                normalized_responses[field] = value
             else:
-                raise ValueError(f"Field '{field}' must be a boolean (true/false) or null")
+                raise ValueError(
+                    f"Field '{field}' must be a valid boolean-like value (Yes/yes/YES/true or No/no/NO/false/null)")
 
         categories = {
             "Psychological PE": normalized_responses["psychological_pe"],
