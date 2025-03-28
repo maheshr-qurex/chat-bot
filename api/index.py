@@ -86,7 +86,7 @@ def diagnose_pe(responses):
             true_values = {"yes", "YES", "Yes", "true", True, "True"}
             false_values = {"no", "NO", "No", "null", "false", False, "False", None}
 
-           if value in true_values:
+            if value in true_values:
                 normalized_responses[field] = True
             elif value in false_values:
                 normalized_responses[field] = False
