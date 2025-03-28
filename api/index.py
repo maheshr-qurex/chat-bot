@@ -20,9 +20,8 @@ def diagnose_ed(responses):
         normalized_responses = {}
         for field in required_fields:
             value = responses[field]
-            # Define sets of values for True and False
-            true_values = {"yes", "YES", "Yes", "true", True, "True", "true"}
-            false_values = {"no", "NO", "No", "null", "false", False, "False", "false", None}
+            true_values = {"yes", "YES", "Yes", "true", True, "True"}
+            false_values = {"no", "NO", "No", "null", "false", False, "False", None}
 
             if value in true_values:
                 normalized_responses[field] = True
@@ -68,15 +67,72 @@ def diagnose_ed(responses):
             "detected_conditions": detected_conditions,
             "suggested_doctors": suggested_doctors
         }
-
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Diagnosis failed: {str(e)}"
+        return {"status": "error", "message": f"Diagnosis failed: {str(e)}"}
+
+
+def diagnose_pe(responses):
+    try:
+        required_fields = [
+            "psychological_pe", "lifelong_pe", "acquired_pe",
+            "porn_masturbation_pe", "penile_hypersensitivity", "prone_masturbation_pe",
+            "genital_infections", "low_serotonin", "overactive_ejaculatory_reflex",
+            "pelvic_floor_dysfunction", "medication_induced_pe", "death_grip_syndrome"
+        ]
+
+        normalized_responses = {}
+        for field in required_fields:
+            value = responses.get(field, None)
+            if value is None:
+                normalized_responses[field] = False
+            elif isinstance(value, bool):
+                normalized_responses[field] = value
+            else:
+                raise ValueError(f"Field '{field}' must be a boolean (true/false) or null")
+
+        categories = {
+            "Psychological PE": normalized_responses["psychological_pe"],
+            "Lifelong PE": normalized_responses["lifelong_pe"],
+            "Acquired PE": normalized_responses["acquired_pe"],
+            "Porn/Masturbation-Induced PE": normalized_responses["porn_masturbation_pe"],
+            "Penile Hypersensitivity": normalized_responses["penile_hypersensitivity"],
+            "Prone Masturbation-Induced PE": normalized_responses["prone_masturbation_pe"],
+            "Genital Infections": normalized_responses["genital_infections"],
+            "Low Serotonin Levels": normalized_responses["low_serotonin"],
+            "Overactive Ejaculatory Reflex": normalized_responses["overactive_ejaculatory_reflex"],
+            "Pelvic Floor Dysfunction": normalized_responses["pelvic_floor_dysfunction"],
+            "Medication-Induced PE": normalized_responses["medication_induced_pe"],
+            "Death Grip Syndrome": normalized_responses["death_grip_syndrome"],
         }
 
+        recommendations = {
+            "Psychological PE": ["Psychiatrist", "Sexologist"],
+            "Lifelong PE": ["Andrologist", "Urologist"],
+            "Acquired PE": ["Andrologist", "Endocrinologist"],
+            "Porn/Masturbation-Induced PE": ["Sexologist", "Psychosexual Therapist"],
+            "Penile Hypersensitivity": ["Andrologist", "Urologist"],
+            "Prone Masturbation-Induced PE": ["Sexologist", "Psychosexual Therapist"],
+            "Genital Infections": ["Urologist", "Andrologist"],
+            "Low Serotonin Levels": ["Psychiatrist"],
+            "Overactive Ejaculatory Reflex": ["Andrologist", "Neurologist"],
+            "Pelvic Floor Dysfunction": ["Pelvic Floor Physiotherapist", "Andrologist"],
+            "Medication-Induced PE": ["Andrologist", "Primary Care Doctor"],
+            "Death Grip Syndrome": ["Sexologist", "Psychosexual Therapist"],
+        }
 
-class handler(BaseHTTPRequestHandler):
+        detected_conditions = [key for key, value in categories.items() if value]
+        suggested_doctors = list({doc for condition in detected_conditions for doc in recommendations[condition]})
+
+        return {
+            "status": "success",
+            "Detected Conditions": detected_conditions,
+            "Suggested Doctors": suggested_doctors
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"Diagnosis failed: {str(e)}"}
+
+
+class Handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -88,7 +144,7 @@ class handler(BaseHTTPRequestHandler):
         try:
             response = {
                 "status": "success",
-                "message": "Welcome to the ED Diagnosis API! Use POST to send symptoms."
+                "message": "Welcome to the Diagnosis API! Use POST to /api/ed or /api/pe to send symptoms."
             }
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -103,25 +159,41 @@ class handler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get('Content-Length', 0))
             if content_length == 0:
                 raise ValueError("Empty request body")
+
             logger.info(f"Received request with content length: {content_length}")
             post_data = self.rfile.read(content_length)
             logger.info(f"Raw POST data: {post_data.decode('utf-8')}")
             data = json.loads(post_data)
 
-            required_fields = [
-                "stress_anxiety", "anxious_before_sex", "medical_conditions",
-                "smoking_alcohol", "weight_fatigue", "medications",
-                "pelvic_injury", "pain_curvature", "loud_snoring",
-                "autoimmune_conditions", "groin_pain", "tight_grip_masturbation"
-            ]
+            path = self.path
+            if path == '/api/ed':
+                required_fields = [
+                    "stress_anxiety", "anxious_before_sex", "medical_conditions",
+                    "smoking_alcohol", "weight_fatigue", "medications",
+                    "pelvic_injury", "pain_curvature", "loud_snoring",
+                    "autoimmune_conditions", "groin_pain", "tight_grip_masturbation"
+                ]
+                if not all(field in data for field in required_fields):
+                    missing = [field for field in required_fields if field not in data]
+                    raise KeyError(f"Missing fields for ED diagnosis: {', '.join(missing)}")
+                result = diagnose_ed(data)
 
-            if not all(field in data for field in required_fields):
-                missing = [field for field in required_fields if field not in data]
-                raise KeyError(f"Missing fields: {', '.join(missing)}")
+            elif path == '/api/pe':
+                required_fields = [
+                    "psychological_pe", "lifelong_pe", "acquired_pe",
+                    "porn_masturbation_pe", "penile_hypersensitivity", "prone_masturbation_pe",
+                    "genital_infections", "low_serotonin", "overactive_ejaculatory_reflex",
+                    "pelvic_floor_dysfunction", "medication_induced_pe", "death_grip_syndrome"
+                ]
+                if not all(field in data for field in required_fields):
+                    missing = [field for field in required_fields if field not in data]
+                    raise KeyError(f"Missing fields for PE diagnosis: {', '.join(missing)}")
+                result = diagnose_pe(data)
 
-            result = diagnose_ed(data)
+            else:
+                raise ValueError(f"Invalid endpoint: {path}. Use /api/ed or /api/pe")
+
             logger.info(f"Response: {result}")
-
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -148,3 +220,13 @@ class handler(BaseHTTPRequestHandler):
             "message": message
         }
         self.wfile.write(json.dumps(error_response).encode('utf-8'))
+
+
+# To run the server (add this at the bottom if you want to test it standalone)
+if __name__ == '__main__':
+    from http.server import HTTPServer
+
+    server_address = ('', 8000)  # Runs on localhost:8000
+    httpd = HTTPServer(server_address, Handler)
+    print("Starting server on port 8000...")
+    httpd.serve_forever()
