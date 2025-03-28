@@ -74,7 +74,7 @@ def diagnose_ed(responses):
 def diagnose_pe(responses):
     try:
         required_fields = [
-            "control_during_sex_masturbation", "lifelong_pe", "acquired_pe",
+            "psychological_pe", "lifelong_pe", "acquired_pe",
             "porn_masturbation_pe", "penile_hypersensitivity", "prone_masturbation_pe",
             "genital_infections", "low_serotonin", "overactive_ejaculatory_reflex",
             "pelvic_floor_dysfunction", "medication_induced_pe", "death_grip_syndrome"
@@ -91,7 +91,7 @@ def diagnose_pe(responses):
                 raise ValueError(f"Field '{field}' must be a boolean (true/false) or null")
 
         categories = {
-            "Psychological PE": normalized_responses["control_during_sex_masturbation"],
+            "Psychological PE": normalized_responses["psychological_pe"],
             "Lifelong PE": normalized_responses["lifelong_pe"],
             "Acquired PE": normalized_responses["acquired_pe"],
             "Porn/Masturbation-Induced PE": normalized_responses["porn_masturbation_pe"],
